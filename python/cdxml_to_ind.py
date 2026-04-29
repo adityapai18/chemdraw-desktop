@@ -165,7 +165,7 @@ def split_cdxml(cdxml_path, output_dir="split_output"):
         ET.ElementTree(doc).write(path, encoding="utf-8", xml_declaration=True)
         paths.append(path)
 
-    print(f"✅ Saved {len(paths)} named molecules to: {output_dir}")
+    print(f"[OK] Saved {len(paths)} named molecules to: {output_dir}")
     return paths
 
 # # === MAIN ===

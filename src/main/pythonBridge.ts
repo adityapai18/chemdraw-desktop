@@ -49,18 +49,21 @@ export class PythonBridge {
   }
 
   private spawnPython(args: string[] = []): ChildProcess {
+    const env = { ...process.env, PYTHONIOENCODING: 'utf-8' }
     if (is.dev) {
       const script = this.getPythonExePath()
       const pythonCmd = this.getDevPythonCommand()
       return spawn(pythonCmd, [script, ...args], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true
+        windowsHide: true,
+        env
       })
     } else {
       const exe = this.getPythonExePath()
       return spawn(exe, args, {
         stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true
+        windowsHide: true,
+        env
       })
     }
   }
