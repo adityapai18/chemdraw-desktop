@@ -17,8 +17,19 @@ type EventCallback = (event: PipelineEvent) => void
 export class PythonBridge {
   private proc: ChildProcess | null = null
 
+  private getDevProjectRoot(): string {
+    const appPath = app.getAppPath()
+    const candidates = [appPath, join(appPath, '..')]
+    for (const candidate of candidates) {
+      if (existsSync(join(candidate, 'python', 'backend.py'))) {
+        return candidate
+      }
+    }
+    return appPath
+  }
+
   private getDevPythonCommand(): string {
-    const root = join(app.getAppPath(), '..')
+    const root = this.getDevProjectRoot()
     const winVenvPython = join(root, 'python', 'venv', 'Scripts', 'python.exe')
     if (existsSync(winVenvPython)) return winVenvPython
 
@@ -31,7 +42,7 @@ export class PythonBridge {
   private getPythonExePath(): string {
     if (is.dev) {
       // In dev, use the local Python in the python/ folder venv or system Python
-      return join(app.getAppPath(), '..', 'python', 'backend.py')
+      return join(this.getDevProjectRoot(), 'python', 'backend.py')
     }
     // In production, use the bundled PyInstaller executable
     return join(process.resourcesPath, 'python-dist', 'backend', 'backend.exe')
