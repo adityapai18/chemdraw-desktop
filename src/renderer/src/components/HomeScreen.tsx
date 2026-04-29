@@ -5,12 +5,21 @@ interface Props {
   cdxPath: string | null
   outputDir: string | null
   chemDrawAvailable: boolean | null
+  chemDrawReason?: string | null
   onSelectCdx: () => void
   onSelectOutput: () => void
   onStart: () => void
 }
 
-export function HomeScreen({ cdxPath, outputDir, chemDrawAvailable, onSelectCdx, onSelectOutput, onStart }: Props): JSX.Element {
+export function HomeScreen({
+  cdxPath,
+  outputDir,
+  chemDrawAvailable,
+  chemDrawReason,
+  onSelectCdx,
+  onSelectOutput,
+  onStart
+}: Props): JSX.Element {
   const [dragging, setDragging] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
 
@@ -58,9 +67,16 @@ export function HomeScreen({ cdxPath, outputDir, chemDrawAvailable, onSelectCdx,
 
       {/* Warning if ChemDraw not found */}
       {chemDrawAvailable === false && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-900/30 border border-red-700/50 text-red-300 text-sm max-w-lg w-full">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>ChemDraw is not installed or not detectable. Stage 1 (CDX → CDXML) and Stage 3 (MOL export) require ChemDraw.</span>
+        <div className="px-4 py-3 rounded-xl bg-red-900/30 border border-red-700/50 text-red-300 text-sm max-w-lg w-full space-y-1.5">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>ChemDraw is not installed or not detectable. Stage 1 (CDX → CDXML) and Stage 3 (MOL export) require ChemDraw.</span>
+          </div>
+          {chemDrawReason && (
+            <p className="text-xs text-red-200/90 font-mono break-words">
+              Detector info: {chemDrawReason}
+            </p>
+          )}
         </div>
       )}
 

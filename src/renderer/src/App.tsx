@@ -10,7 +10,7 @@ declare global {
       selectCdxFile: () => Promise<string | null>
       selectOutputFolder: () => Promise<string | null>
       openPath: (p: string) => Promise<void>
-      checkChemDraw: () => Promise<{ available: boolean; version?: string }>
+      checkChemDraw: () => Promise<{ available: boolean; version?: string; progid?: string; reason?: string }>
       startProcessing: (cdxPath: string, outputDir: string) => Promise<void>
       cancelProcessing: () => Promise<void>
       onPipelineEvent: (cb: (e: PipelineEvent) => void) => () => void
@@ -23,6 +23,7 @@ export default function App(): JSX.Element {
   const [cdxPath, setCdxPath] = useState<string | null>(null)
   const [outputDir, setOutputDir] = useState<string | null>(null)
   const [chemDrawAvailable, setChemDrawAvailable] = useState<boolean | null>(null)
+  const [chemDrawReason, setChemDrawReason] = useState<string | null>(null)
 
   // Processing state
   const [currentStage, setCurrentStage] = useState(0)
@@ -39,7 +40,10 @@ export default function App(): JSX.Element {
   const unsubRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    window.api.checkChemDraw().then((r) => setChemDrawAvailable(r.available))
+    window.api.checkChemDraw().then((r) => {
+      setChemDrawAvailable(r.available)
+      setChemDrawReason(r.available ? null : (r.reason ?? null))
+    })
   }, [])
 
   const addLog = (level: string, text: string): void => {
@@ -137,6 +141,7 @@ export default function App(): JSX.Element {
             cdxPath={cdxPath}
             outputDir={outputDir}
             chemDrawAvailable={chemDrawAvailable}
+            chemDrawReason={chemDrawReason}
             onSelectCdx={async () => {
               const p = await window.api.selectCdxFile()
               if (p) setCdxPath(p)

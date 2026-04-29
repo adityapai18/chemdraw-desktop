@@ -11,7 +11,7 @@ const api = {
   openPath: (p: string): Promise<void> =>
     ipcRenderer.invoke('open-path', p),
 
-  checkChemDraw: (): Promise<{ available: boolean; version?: string }> =>
+  checkChemDraw: (): Promise<{ available: boolean; version?: string; progid?: string; reason?: string }> =>
     ipcRenderer.invoke('check-chemdraw'),
 
   startProcessing: (cdxPath: string, outputDir: string): Promise<void> =>

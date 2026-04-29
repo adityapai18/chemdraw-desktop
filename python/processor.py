@@ -9,12 +9,12 @@ import json
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
-import win32com.client
 import requests
 from typing import Callable
 
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from chemdraw_com import connect_chemdraw
 
 PUBCHEM_DELAY = 0.25
 
@@ -68,7 +68,7 @@ def extract_suffix_tag(name: str) -> str:
 
 
 def open_and_save_as_mol_and_tif(cdxml_path: str, mol_path: str, tif_path: str) -> None:
-    chemdraw = win32com.client.Dispatch("ChemDraw.Application")
+    chemdraw, _ = connect_chemdraw()
     chemdraw.Visible = False
     doc = chemdraw.Documents.Open(os.path.abspath(cdxml_path))
     doc.Activate()

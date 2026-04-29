@@ -1,6 +1,5 @@
 import { spawn, ChildProcess } from 'child_process'
 import { join } from 'path'
-import { existsSync } from 'fs'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 
@@ -10,7 +9,7 @@ export type PipelineEvent =
   | { type: 'log'; level: 'info' | 'warn' | 'error'; message: string }
   | { type: 'result'; success: boolean; excelPath: string; compoundCount: number; outputDir: string }
   | { type: 'error'; message: string }
-  | { type: 'chemdraw_status'; available: boolean; version?: string }
+  | { type: 'chemdraw_status'; available: boolean; version?: string; progid?: string; reason?: string }
 
 type EventCallback = (event: PipelineEvent) => void
 
@@ -42,25 +41,37 @@ export class PythonBridge {
     }
   }
 
-  async checkChemDraw(): Promise<{ available: boolean; version?: string }> {
+  async checkChemDraw(): Promise<{ available: boolean; version?: string; progid?: string; reason?: string }> {
     return new Promise((resolve) => {
       const proc = this.spawnPython(['--check-chemdraw'])
       let output = ''
+      let done = false
+
+      const finish = (result: { available: boolean; version?: string; progid?: string; reason?: string }): void => {
+        if (done) return
+        done = true
+        resolve(result)
+      }
 
       proc.stdout?.on('data', (d) => (output += d.toString()))
       proc.on('close', () => {
         try {
           const result = JSON.parse(output.trim().split('\n').pop()!)
-          resolve({ available: result.available, version: result.version })
+          finish({
+            available: Boolean(result.available),
+            version: result.version,
+            progid: result.progid,
+            reason: result.reason
+          })
         } catch {
-          resolve({ available: false })
+          finish({ available: false, reason: 'Could not parse ChemDraw check output from Python backend.' })
         }
       })
-      proc.on('error', () => resolve({ available: false }))
+      proc.on('error', (err) => finish({ available: false, reason: err.message }))
 
       setTimeout(() => {
         proc.kill()
-        resolve({ available: false })
+        finish({ available: false, reason: 'Timed out while checking ChemDraw availability.' })
       }, 8000)
     })
   }

@@ -13,13 +13,16 @@ def emit(obj: dict) -> None:
 
 def check_chemdraw() -> dict:
     try:
-        import win32com.client
-        app = win32com.client.Dispatch("ChemDraw.Application")
+        from chemdraw_com import connect_chemdraw
+        app, progid = connect_chemdraw()
         version = getattr(app, "Version", "unknown")
-        app.Quit()
-        return {"type": "chemdraw_status", "available": True, "version": str(version)}
-    except Exception:
-        return {"type": "chemdraw_status", "available": False}
+        try:
+            app.Quit()
+        except Exception:
+            pass
+        return {"type": "chemdraw_status", "available": True, "version": str(version), "progid": progid}
+    except Exception as e:
+        return {"type": "chemdraw_status", "available": False, "reason": str(e)}
 
 def run_pipeline(cdx_path: str, output_dir: str) -> None:
     from pipeline import run_full_pipeline

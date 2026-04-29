@@ -1,6 +1,6 @@
-import win32com.client
 import os
 import time
+from chemdraw_com import connect_chemdraw
 
 def automate_chemdraw_conversion_to_cdxml(input_cdx_path, output_cdxml_path):
     print(f"Opening CDX file: {input_cdx_path}")
@@ -8,7 +8,7 @@ def automate_chemdraw_conversion_to_cdxml(input_cdx_path, output_cdxml_path):
         print(f"Error: File not found at '{input_cdx_path}'")
         return
 
-    chemdraw_app = win32com.client.Dispatch("ChemDraw.Application")
+    chemdraw_app, _ = connect_chemdraw()
     chemdraw_app.Visible = True
     time.sleep(2)
 
