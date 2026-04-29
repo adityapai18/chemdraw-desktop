@@ -1,0 +1,6 @@
+pandas
+openpyxl
+requests
+rdkit
+periodictable
+pywin32

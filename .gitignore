@@ -1,0 +1,11 @@
+node_modules/
+out/
+dist/
+dist-electron/
+python/__pycache__/
+python/build/
+python/dist/
+python/*.pyc
+python-dist/
+.env
+*.log
