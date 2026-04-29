@@ -74,6 +74,8 @@ REM 6) Build Python backend and stage under python-dist
 echo [5/7] Building Python backend with PyInstaller...
 if exist "python\build" rmdir /s /q "python\build"
 if exist "python\dist" rmdir /s /q "python\dist"
+if exist "build" rmdir /s /q "build"
+if exist "dist" rmdir /s /q "dist"
 "%PY_EXE%" -m PyInstaller "python\backend.spec" --clean --noconfirm
 if errorlevel 1 (
   echo [ERROR] PyInstaller build failed.
@@ -81,15 +83,19 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "python\dist\backend\backend.exe" (
-  echo [ERROR] Expected output missing: python\dist\backend\backend.exe
+set "PY_DIST_DIR="
+if exist "python\dist\backend\backend.exe" set "PY_DIST_DIR=python\dist\backend"
+if exist "dist\backend\backend.exe" set "PY_DIST_DIR=dist\backend"
+
+if "%PY_DIST_DIR%"=="" (
+  echo [ERROR] Expected output missing: python\dist\backend\backend.exe or dist\backend\backend.exe
   pause
   exit /b 1
 )
 
 if exist "python-dist" rmdir /s /q "python-dist"
 mkdir "python-dist"
-xcopy /E /I /Y "python\dist\backend" "python-dist\backend" >nul
+xcopy /E /I /Y "%PY_DIST_DIR%" "python-dist\backend" >nul
 if errorlevel 1 (
   echo [ERROR] Failed to copy backend bundle to python-dist.
   pause
