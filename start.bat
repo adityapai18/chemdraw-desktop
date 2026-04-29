@@ -8,7 +8,7 @@ echo   ChemDraw Processor - Starting up...
 echo  =========================================
 echo.
 
-REM ── 1. Node.js check ──────────────────────────────────────────────────────
+REM 1) Node.js check
 where node >nul 2>&1
 if errorlevel 1 (
     echo  [ERROR] Node.js is not installed.
@@ -18,7 +18,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM ── 2. Python check ───────────────────────────────────────────────────────
+REM 2) Python check
 where python >nul 2>&1
 if errorlevel 1 (
     echo  [ERROR] Python is not installed.
@@ -28,9 +28,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM ── 3. npm dependencies ───────────────────────────────────────────────────
+REM 3) npm dependencies
 if not exist "node_modules" (
-    echo  [1/3] Installing Node.js dependencies (first run only)...
+    echo  [1/3] Installing Node.js dependencies ^(first run only^)...
     call npm install --silent
     if errorlevel 1 (
         echo  [ERROR] npm install failed.
@@ -42,9 +42,9 @@ if not exist "node_modules" (
     echo  [1/3] Node.js dependencies already installed.
 )
 
-REM ── 4. Python virtual environment ─────────────────────────────────────────
+REM 4) Python virtual environment
 if not exist "python\venv" (
-    echo  [2/3] Creating Python virtual environment (first run only)...
+    echo  [2/3] Creating Python virtual environment ^(first run only^)...
     python -m venv python\venv
     if errorlevel 1 (
         echo  [ERROR] Failed to create Python virtual environment.
@@ -56,7 +56,7 @@ if not exist "python\venv" (
     echo  [2/3] Python virtual environment already exists.
 )
 
-REM ── 5. Python dependencies ────────────────────────────────────────────────
+REM 5) Python dependencies
 echo  [3/3] Syncing Python dependencies...
 python\venv\Scripts\pip install -r python\requirements.txt -q --disable-pip-version-check
 if errorlevel 1 (
@@ -66,12 +66,12 @@ if errorlevel 1 (
 )
 echo        Done.
 
-REM ── 6. Put venv on PATH so Electron can find Python when spawning it ──────
+REM 6) Put venv on PATH so Electron can find Python when spawning it
 set "PATH=%~dp0python\venv\Scripts;%PATH%"
 
 echo.
 echo  Launching app...
 echo.
 
-REM ── 7. Start ──────────────────────────────────────────────────────────────
+REM 7) Start
 call npm run dev
