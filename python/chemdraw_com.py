@@ -17,16 +17,23 @@ def _discover_progids() -> list[str]:
         [
             "ChemDraw.Application",
             "ChemOffice.ChemDrawApp",
+            "ChemDraw_x64.Application",
         ]
     )
 
     # Add versioned ProgIDs commonly registered by installers.
     for major in range(40, 9, -1):
         candidates.append(f"ChemDraw.Application.{major}")
+        candidates.append(f"ChemDraw_x64.Application.{major}")
 
-    # Try CurVer from registry if available.
+    # Pull additional COM classes directly from registry if available.
     if winreg is not None:
-        for key_path in ("ChemDraw.Application", r"Wow6432Node\ChemDraw.Application"):
+        for key_path in (
+            "ChemDraw.Application",
+            "ChemDraw_x64.Application",
+            r"Wow6432Node\ChemDraw.Application",
+            r"Wow6432Node\ChemDraw_x64.Application",
+        ):
             try:
                 with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, key_path) as key:
                     cur_ver, _ = winreg.QueryValueEx(key, "CurVer")
@@ -34,6 +41,17 @@ def _discover_progids() -> list[str]:
                         candidates.insert(0, cur_ver.strip())
             except Exception:
                 pass
+
+        try:
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "") as root:
+                i = 0
+                while True:
+                    subkey = winreg.EnumKey(root, i)
+                    if subkey.lower().startswith("chemdraw") and ".application" in subkey.lower():
+                        candidates.append(subkey)
+                    i += 1
+        except Exception:
+            pass
 
     # De-duplicate while preserving order.
     seen = set()
