@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'child_process'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 
@@ -16,6 +17,17 @@ type EventCallback = (event: PipelineEvent) => void
 export class PythonBridge {
   private proc: ChildProcess | null = null
 
+  private getDevPythonCommand(): string {
+    const root = join(app.getAppPath(), '..')
+    const winVenvPython = join(root, 'python', 'venv', 'Scripts', 'python.exe')
+    if (existsSync(winVenvPython)) return winVenvPython
+
+    const unixVenvPython = join(root, 'python', 'venv', 'bin', 'python')
+    if (existsSync(unixVenvPython)) return unixVenvPython
+
+    return 'python'
+  }
+
   private getPythonExePath(): string {
     if (is.dev) {
       // In dev, use the local Python in the python/ folder venv or system Python
@@ -28,7 +40,8 @@ export class PythonBridge {
   private spawnPython(args: string[] = []): ChildProcess {
     if (is.dev) {
       const script = this.getPythonExePath()
-      return spawn('python', [script, ...args], {
+      const pythonCmd = this.getDevPythonCommand()
+      return spawn(pythonCmd, [script, ...args], {
         stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true
       })
@@ -45,6 +58,7 @@ export class PythonBridge {
     return new Promise((resolve) => {
       const proc = this.spawnPython(['--check-chemdraw'])
       let output = ''
+      let stderr = ''
       let done = false
 
       const finish = (result: { available: boolean; version?: string; progid?: string; reason?: string }): void => {
@@ -54,14 +68,36 @@ export class PythonBridge {
       }
 
       proc.stdout?.on('data', (d) => (output += d.toString()))
+      proc.stderr?.on('data', (d) => (stderr += d.toString()))
       proc.on('close', () => {
+        const lines = output
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+
+        // Parse from the end to tolerate extra log lines before JSON output.
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const result = JSON.parse(lines[i])
+            finish({
+              available: Boolean(result.available),
+              version: result.version,
+              progid: result.progid,
+              reason: result.reason
+            })
+            return
+          } catch {
+            // Keep scanning earlier lines for JSON.
+          }
+        }
+
         try {
-          const result = JSON.parse(output.trim().split('\n').pop()!)
           finish({
-            available: Boolean(result.available),
-            version: result.version,
-            progid: result.progid,
-            reason: result.reason
+            available: false,
+            reason:
+              stderr.trim() ||
+              output.trim() ||
+              'Could not parse ChemDraw check output from Python backend.'
           })
         } catch {
           finish({ available: false, reason: 'Could not parse ChemDraw check output from Python backend.' })
